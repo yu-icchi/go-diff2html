@@ -12,17 +12,31 @@ import (
 	"strings"
 )
 
+var (
+	genericColumnLineNumnerTemplate = template.Must(template.New("generic-column-line-number").Parse(genericColumnLineNumber))
+	genericEmptyDiffTemplate        = template.Must(template.New("generic-empty-diff").Parse(genericEmptyDiff))
+	genericFilePathTemplate         = template.Must(template.New("generic-file-path").Parse(genericFilePath))
+	genericLineTemplate             = template.Must(template.New("generic-line").Parse(genericLine))
+	genericWrapperTemplate          = template.Must(template.New("generic-wrapper").Parse(genericWrapper))
+	iconFileTemplate                = template.Must(template.New("icon-file").Parse(iconFile))
+	sideBySideFileDiffTemplate      = template.Must(template.New("side-by-side-file-diff").Parse(sideBySideFileDiff))
+	tagFileAddedTemplate            = template.Must(template.New("tag-file-added").Parse(tagFileAdded))
+	tagFileChangedTemplate          = template.Must(template.New("tag-file-changed").Parse(tagFileChanged))
+	tagFileDeletedTemplate          = template.Must(template.New("tag-file-deleted").Parse(tagFileDeleted))
+	tagFileRenamedTemplate          = template.Must(template.New("tag-file-renamed").Parse(tagFileRenamed))
+)
+
 type Config struct {
 }
 
 type sideBySide struct {
 	FileHTMLID string
 	FilePath   string
-	Diff       sideDiff
+	Diff       fileHTML
 	File       *diff.File
 }
 
-type sideDiff struct {
+type fileHTML struct {
 	Left  string
 	Right string
 }
@@ -40,7 +54,7 @@ type SideBySidePrinter struct {
 func (p *SideBySidePrinter) GenerateSideBySideHTML(files []*diff.File) (string, error) {
 	content := ""
 	for _, file := range files {
-		var fileHTML *sideDiff
+		var fileHTML *fileHTML
 		var err error
 		if len(file.Blocks) > 0 {
 			fileHTML, err = p.genSideBySideFileHTML(file)
@@ -62,45 +76,43 @@ func (p *SideBySidePrinter) GenerateSideBySideHTML(files []*diff.File) (string, 
 		content += "\n"
 	}
 
-	tmpl, err := template.ParseFiles("generic-wrapper.tmpl")
-	if err != nil {
-		return "", err
-	}
 	buf := &bytes.Buffer{}
-	err = tmpl.Execute(buf, struct {
+	err := genericWrapperTemplate.Execute(buf, struct {
 		Content template.HTML
 	}{
 		Content: template.HTML(content),
 	})
+	if err != nil {
+		return "", err
+	}
 
 	return buf.String(), nil
 }
 
-func (p *SideBySidePrinter) makeDiffHTML(file *diff.File, diffs *sideDiff) (string, error) {
+func (p *SideBySidePrinter) makeDiffHTML(file *diff.File, diffs *fileHTML) (string, error) {
 
 	pathHTML, err := p.makePathHTML(file)
 	if err != nil {
 		return "", err
 	}
 
-	tmpl, err := template.ParseFiles("side-by-side-file-diff.tmpl")
-	if err != nil {
-		return "", err
-	}
 	buf := &bytes.Buffer{}
-	err = tmpl.Execute(buf, struct {
+	err = sideBySideFileDiffTemplate.Execute(buf, struct {
 		FileHTMLID string
 		FilePath   template.HTML
 		Language   string
 		Left       template.HTML
 		Right      template.HTML
 	}{
-		FileHTMLID: "d2h-sample",
+		FileHTMLID: getHTMLID(file),
 		FilePath:   template.HTML(pathHTML),
 		Language:   file.Language,
 		Left:       template.HTML(diffs.Left),
 		Right:      template.HTML(diffs.Right),
 	})
+	if err != nil {
+		return "", err
+	}
 	return buf.String(), nil
 }
 
@@ -114,12 +126,8 @@ func (p *SideBySidePrinter) makePathHTML(file *diff.File) (string, error) {
 		return "", err
 	}
 
-	tmpl, err := template.ParseFiles("generic-file-path.tmpl")
-	if err != nil {
-		return "", err
-	}
 	buf := &bytes.Buffer{}
-	err = tmpl.Execute(buf, struct {
+	err = genericFilePathTemplate.Execute(buf, struct {
 		FileDiffName string
 		FileIcon     template.HTML
 		FileTag      template.HTML
@@ -128,38 +136,45 @@ func (p *SideBySidePrinter) makePathHTML(file *diff.File) (string, error) {
 		FileIcon:     template.HTML(iconHTML),
 		FileTag:      template.HTML(tagHTML),
 	})
+	if err != nil {
+		return "", err
+	}
 	return buf.String(), nil
 }
 
 func (p *SideBySidePrinter) makeIconHTML() (string, error) {
-	tmpl, err := template.ParseFiles("icon-file.tmpl")
+	buf := &bytes.Buffer{}
+	err := iconFileTemplate.Execute(buf, struct{}{})
 	if err != nil {
 		return "", err
 	}
-	buf := &bytes.Buffer{}
-	err = tmpl.Execute(buf, struct{}{})
 	return buf.String(), nil
 }
 
 func (p *SideBySidePrinter) makeTagHTML(file *diff.File) (string, error) {
-	tag := getFileTypeIcon(file)
-	tmpl, err := template.ParseFiles("tag-" + tag + ".tmpl")
+	tagTemplate := tagFileChangedTemplate
+	if file.IsRename {
+		tagTemplate = tagFileRenamedTemplate
+	} else if file.IsCopy {
+		tagTemplate = tagFileRenamedTemplate
+	} else if file.IsNew {
+		tagTemplate = tagFileAddedTemplate
+	} else if file.IsDeleted {
+		tagTemplate = tagFileDeletedTemplate
+	} else if file.NewName != file.OldName {
+		tagTemplate = tagFileRenamedTemplate
+	}
+	buf := &bytes.Buffer{}
+	err := tagTemplate.Execute(buf, struct{}{})
 	if err != nil {
 		return "", err
 	}
-	buf := &bytes.Buffer{}
-	err = tmpl.Execute(buf, struct {
-	}{})
 	return buf.String(), nil
 }
 
 func (p *SideBySidePrinter) makeSideHTML(blockHeader string) (string, error) {
 	buf := &bytes.Buffer{}
-	tmpl, err := template.ParseFiles("generic-column-line-number.tmpl")
-	if err != nil {
-		return "", err
-	}
-	err = tmpl.Execute(buf, struct {
+	err := genericColumnLineNumnerTemplate.Execute(buf, struct {
 		BlockHeader  string
 		Type         string
 		LineClass    string
@@ -170,13 +185,16 @@ func (p *SideBySidePrinter) makeSideHTML(blockHeader string) (string, error) {
 		LineClass:    "d2h-code-side-linenumber",
 		ContentClass: "d2h-code-side-line",
 	})
+	if err != nil {
+		return "", err
+	}
 	return buf.String(), nil
 }
 
-func (p *SideBySidePrinter) genSideBySideFileHTML(file *diff.File) (*sideDiff, error) {
+func (p *SideBySidePrinter) genSideBySideFileHTML(file *diff.File) (*fileHTML, error) {
 	var err error
 
-	fileHTML := &sideDiff{
+	fileHTML := &fileHTML{
 		Left:  "",
 		Right: "",
 	}
@@ -289,10 +307,8 @@ func (p *SideBySidePrinter) genSideBySideFileHTML(file *diff.File) (*sideDiff, e
 	return fileHTML, nil
 }
 
-func (p *SideBySidePrinter) processLines(isCombined bool, oldLines, newLines []*diff.Line) (*sideDiff, error) {
-	fileHTML := &sideDiff{}
-	fileHTML.Left = ""
-	fileHTML.Right = ""
+func (p *SideBySidePrinter) processLines(isCombined bool, oldLines, newLines []*diff.Line) (*fileHTML, error) {
+	fileHTML := &fileHTML{Left: "", Right: ""}
 
 	oldLinesLen := len(oldLines)
 	newLinesLen := len(newLines)
@@ -370,18 +386,13 @@ func (p *SideBySidePrinter) genSingleLineHTML(isCombined bool, lineType string, 
 		prefix, lineWithoutPrefix = separatePrefix(isCombined, content)
 	}
 
-	buf := &bytes.Buffer{}
-	tmpl, err := template.ParseFiles("generic-line.tmpl")
-	if err != nil {
-		return "", err
-	}
-
 	lineNumberStr := ""
 	if num > 0 {
 		lineNumberStr = strconv.Itoa(num)
 	}
 
-	err = tmpl.Execute(buf, struct {
+	buf := &bytes.Buffer{}
+	err := genericLineTemplate.Execute(buf, struct {
 		Type          string
 		Prefix        string
 		Content       string
@@ -396,28 +407,29 @@ func (p *SideBySidePrinter) genSingleLineHTML(isCombined bool, lineType string, 
 		LineClass:     "d2h-code-side-linenumber",
 		ContentClass:  "d2h-code-side-line",
 	})
-	str := buf.String()
-	return str, nil
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
-func (p *SideBySidePrinter) genEmptyDiff() (*sideDiff, error) {
-	fileHTML := &sideDiff{}
+func (p *SideBySidePrinter) genEmptyDiff() (*fileHTML, error) {
+	fileHTML := &fileHTML{}
 	fileHTML.Right = ""
 
 	buf := &bytes.Buffer{}
-	tmpl, err := template.ParseFiles("generic-empty-diff.tmpl")
-	if err != nil {
-		return nil, err
-	}
-	err = tmpl.Execute(buf, struct {
+	err := genericEmptyDiffTemplate.Execute(buf, struct {
 		Type         string
 		ContentClass string
 	}{
 		Type:         diff.Info,
 		ContentClass: "d2h-code-side-line",
 	})
-	fileHTML.Left = buf.String()
+	if err != nil {
+		return nil, err
+	}
 
+	fileHTML.Left = buf.String()
 	return fileHTML, nil
 }
 
@@ -436,24 +448,15 @@ func separatePrefix(isCombined bool, line string) (string, string) {
 	return prefix, lineWithoutPrefix
 }
 
-func getHTMLID(file *diff.File) {
-
-}
-
-func getFileTypeIcon(file *diff.File) string {
-	templateName := "file-changed"
-	if file.IsRename {
-		templateName = "file-renamed"
-	} else if file.IsCopy {
-		templateName = "file-renamed"
-	} else if file.IsNew {
-		templateName = "file-added"
-	} else if file.IsDeleted {
-		templateName = "file-deleted"
-	} else if file.NewName != file.OldName {
-		templateName = "file-renamed"
+func getHTMLID(file *diff.File) string {
+	name := getDiffName(file)
+	hash := 0
+	for i := 0; i < len(name); i++ {
+		hash = ((hash << 5) - hash) + int(name[i])
+		hash |= 0
 	}
-	return templateName
+	name = strconv.Itoa(hash)
+	return "d2h-" + name[len(name)-6:]
 }
 
 func getDiffName(file *diff.File) string {
