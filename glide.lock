@@ -1,0 +1,22 @@
+hash: d2820d99e30d70918ffd1798cf6c9dfc78655f0dbc4d38ca7076547daa6bb3b0
+updated: 2017-07-31T17:28:32.955901141+09:00
+imports:
+- name: github.com/k0kubun/pp
+  version: d1532fc5d94ecdf2da29e24d7b99721f3287de4a
+- name: github.com/mattn/go-colorable
+  version: 040dd0b833b34b4182673409ada4df2853b26537
+- name: github.com/mattn/go-isatty
+  version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
+- name: github.com/sergi/go-diff
+  version: feef008d51ad2b3778f85d387ccf91735543008d
+  subpackages:
+  - diffmatchpatch
+- name: golang.org/x/sys
+  version: 0f826bdd13b500be0f1d4004938ad978fcc6031e
+  subpackages:
+  - unix
+testImports: []
