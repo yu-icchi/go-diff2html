@@ -189,22 +189,22 @@ func (d *Diff) createLine(line string) {
 		d.currentFile.AddedLines++
 		currentLine.Type = inserts
 		currentLine.OldNumber = 0
-		d.newLine++
 		currentLine.NewNumber = d.newLine
+		d.newLine++
 		d.currentBlock.addLine(currentLine)
 	} else if startsWith(line, delLinePrefixes) {
 		d.currentFile.DeletedLines++
 		currentLine.Type = deletes
-		d.oldLine++
 		currentLine.OldNumber = d.oldLine
+		d.oldLine++
 		currentLine.NewNumber = 0
 		d.currentBlock.addLine(currentLine)
 	} else {
 		currentLine.Type = context
-		d.oldLine++
 		currentLine.OldNumber = d.oldLine
-		d.newLine++
+		d.oldLine++
 		currentLine.NewNumber = d.newLine
+		d.newLine++
 		d.currentBlock.addLine(currentLine)
 	}
 }

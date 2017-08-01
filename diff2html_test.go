@@ -39,6 +39,8 @@ func Test_GetPrettyHTML(t *testing.T) {
 	}
 	input, _ := difflib.GetUnifiedDiffString(diff)
 
+	fmt.Println(input)
+
 	html, err := GetPrettyHTML(input)
 	fmt.Println(html)
 	fmt.Println(err)
