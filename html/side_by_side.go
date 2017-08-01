@@ -458,7 +458,8 @@ func getHTMLID(file *diff.File) string {
 		hash |= 0
 	}
 	name = strconv.Itoa(hash)
-	return "d2h-" + name[len(name)-6:]
+	l := int(math.Min(float64(len(name)), float64(6)))
+	return "d2h-" + name[:l]
 }
 
 func getDiffName(file *diff.File) string {
