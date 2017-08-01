@@ -255,11 +255,9 @@ func (p *SideBySidePrinter) genSideBySideFileHTML(file *diff.File) (*fileHTML, e
 
 		for _, line := range block.Lines {
 			prefix := string(line.Content[0])
-			// escapedLine := html.EscapeString(line.Content[1:])
 			escapedLine := line.Content[1:]
 
-			if line.Type != diff.Inserts &&
-				(len(newLines) > 0) || (line.Type != diff.Deletes && len(oldLines) > 0) {
+			if line.Type != diff.Inserts && (len(newLines) > 0 || (line.Type != diff.Deletes && len(oldLines) > 0)) {
 				if err := processChangeBlock(); err != nil {
 					return nil, err
 				}
@@ -329,12 +327,10 @@ func (p *SideBySidePrinter) processLines(isCombined bool, oldLines, newLines []*
 		var newPrefix string
 
 		if oldLine != nil {
-			// oldContent = html.EscapeString(oldLine.Content[1:])
 			oldContent = oldLine.Content[1:]
 			oldPrefix = oldLine.Content[0:1]
 		}
 		if newLine != nil {
-			// newContent = html.EscapeString(newLine.Content[1:])
 			newContent = newLine.Content[1:]
 			newPrefix = newLine.Content[0:1]
 		}
@@ -519,7 +515,6 @@ func diffHighlight(diffLine1, diffLine2 string, isCombined bool) Highlight {
 		} else if part.Type == diffmatchpatch.DiffDelete {
 			elemType = "del"
 		}
-		// escapedValue := html.EscapeString(part.Text)
 		escapedValue := part.Text
 		if elemType != "" {
 			highlightedLine += "<" + elemType + ">" + escapedValue + "</" + elemType + ">"

@@ -72,3 +72,10 @@ func Test_diffHighlight(t *testing.T) {
 	highlight := diffHighlight(" category:campaign,", " category:guidance,", false)
 	fmt.Println(highlight)
 }
+
+func Test_hoge(t *testing.T) {
+	arr := []int{1, 2, 3, 4, 5}
+	fmt.Println(arr)
+	fmt.Println(arr[2:])
+	fmt.Println(arr)
+}

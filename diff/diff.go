@@ -128,7 +128,7 @@ func (d *Diff) startBlock(line string) {
 	d.saveBlock()
 
 	if values := combined1.FindStringSubmatch(line); len(values) >= 3 {
-		d.currentFile.IsCombined = true
+		d.currentFile.IsCombined = false
 		oldLine, err := strconv.Atoi(values[1])
 		if err != nil {
 			panic(err) // todo...

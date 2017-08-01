@@ -18,7 +18,7 @@ func Test_GetPrettyHTML(t *testing.T) {
 		B: 100,
 	})
 	var ao bytes.Buffer
-	json.Indent(&ao, a, "", "\n")
+	json.Indent(&ao, a, "", "  ")
 
 	b, _ := json.Marshal(struct {
 		A string `json:"a"`
@@ -28,7 +28,7 @@ func Test_GetPrettyHTML(t *testing.T) {
 		B: 10,
 	})
 	var bo bytes.Buffer
-	json.Indent(&bo, b, "", "\n")
+	json.Indent(&bo, b, "", "  ")
 
 	diff := difflib.UnifiedDiff{
 		A:        difflib.SplitLines(ao.String()),
@@ -38,7 +38,6 @@ func Test_GetPrettyHTML(t *testing.T) {
 		Context:  3,
 	}
 	input, _ := difflib.GetUnifiedDiffString(diff)
-	fmt.Printf(input)
 
 	html, err := GetPrettyHTML(input)
 	fmt.Println(html)
