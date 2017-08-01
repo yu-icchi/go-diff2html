@@ -1,8 +1,8 @@
 package diff
 
 import (
+	"fmt"
 	"testing"
-	"github.com/k0kubun/pp"
 )
 
 func TestNew(t *testing.T) {
@@ -20,7 +20,7 @@ func TestNew(t *testing.T) {
 	d := New(conf)
 	d.Parser(diff)
 
-	pp.Println(d.Files)
+	fmt.Println(d.Files)
 }
 
 func TestNew2(t *testing.T) {
@@ -38,7 +38,7 @@ func TestNew2(t *testing.T) {
 	d := New(conf)
 	d.Parser(diff)
 
-	pp.Println(d.Files)
+	fmt.Println(d.Files)
 }
 
 func TestNew3(t *testing.T) {
@@ -55,5 +55,5 @@ func TestNew3(t *testing.T) {
 	d := New(conf)
 	d.Parser(diff)
 
-	pp.Println(d.Files)
+	fmt.Println(d.Files)
 }

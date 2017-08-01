@@ -2,7 +2,6 @@ package html
 
 import (
 	"fmt"
-	"github.com/k0kubun/pp"
 	"github.com/yu-ichiko/go-diff2html/diff"
 	"testing"
 )
@@ -71,5 +70,5 @@ func Test_getDiffName(t *testing.T) {
 
 func Test_diffHighlight(t *testing.T) {
 	highlight := diffHighlight(" category:campaign,", " category:guidance,", false)
-	pp.Println(highlight)
+	fmt.Println(highlight)
 }

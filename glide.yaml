@@ -1,8 +1,5 @@
 package: github.com/yu-ichiko/go-diff2html
 import:
-- package: github.com/pmezard/go-difflib
-  subpackages:
-  - difflib
 - package: github.com/sergi/go-diff
   subpackages:
   - diffmatchpatch

@@ -344,34 +344,34 @@ func (p *SideBySidePrinter) processLines(isCombined bool, oldLines, newLines []*
 			if err != nil {
 				return nil, err
 			}
-			fileHTML.Left = left
+			fileHTML.Left += left
 			right, err := p.genSingleLineHTML(isCombined, newLine.Type, newLine.NewNumber, newContent, newPrefix)
 			if err != nil {
 				return nil, err
 			}
-			fileHTML.Right = right
+			fileHTML.Right += right
 		} else if oldLine != nil {
 			left, err := p.genSingleLineHTML(isCombined, oldLine.Type, oldLine.OldNumber, oldContent, oldPrefix)
 			if err != nil {
 				return nil, err
 			}
-			fileHTML.Left = left
+			fileHTML.Left += left
 			right, err := p.genSingleLineHTML(isCombined, diff.Ctx, 0, "", "")
 			if err != nil {
 				return nil, err
 			}
-			fileHTML.Right = right
+			fileHTML.Right += right
 		} else if newLine != nil {
 			left, err := p.genSingleLineHTML(isCombined, diff.Ctx, 0, "", "")
 			if err != nil {
 				return nil, err
 			}
-			fileHTML.Left = left
+			fileHTML.Left += left
 			right, err := p.genSingleLineHTML(isCombined, newLine.Type, newLine.NewNumber, newContent, newPrefix)
 			if err != nil {
 				return nil, err
 			}
-			fileHTML.Right = right
+			fileHTML.Right += right
 		} else {
 			// console.error('How did it get here?');
 		}
