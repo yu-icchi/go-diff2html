@@ -59,4 +59,4 @@ func BenchmarkGetPrettyHTML(b *testing.B) {
 	}
 }
 
-// 5000	    227235 ns/op	  268941 B/op	     757 allocs/op
+// 5000	    233375 ns/op	  268966 B/op	     758 allocs/op

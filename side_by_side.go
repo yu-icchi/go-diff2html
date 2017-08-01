@@ -492,6 +492,7 @@ func diffHighlight(diffLine1, diffLine2 string, isCombined bool) Highlight {
 
 	differ := diffmatchpatch.New()
 	diffs := differ.DiffMain(unprefixedLine1, unprefixedLine2, true)
+	diffs = differ.DiffCleanupSemantic(diffs)
 
 	highlightedLine := ""
 	for _, part := range diffs {
