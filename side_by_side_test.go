@@ -1,8 +1,7 @@
-package html
+package diff2html
 
 import (
 	"fmt"
-	"github.com/yu-ichiko/go-diff2html/diff"
 	"testing"
 )
 
@@ -13,54 +12,49 @@ func TestNewSideBySide(t *testing.T) {
 		"-test\n" +
 		"+test1r\n" +
 		"+test2r\n"
-	d := diff.New(diff.Config{
+	d := newDiff(Config{
 		SrcPrefix: "",
 		DstPrefix: "",
 	})
 	d.Parser(input)
 
-	conf := Config{}
-	side := NewSideBySide(conf)
+	side := newSideBySide()
 	html, err := side.GenerateSideBySideHTML(d.Files)
 	fmt.Println(html)
 	fmt.Println(err)
 }
 
 func TestSideBySidePrinter_makeSideHTML(t *testing.T) {
-	conf := Config{}
-	side := NewSideBySide(conf)
+	side := newSideBySide()
 	html, err := side.makeSideHTML("header")
 	fmt.Println(html)
 	fmt.Println(err)
 }
 
 func TestSideBySidePrinter_genSingleLineHTML(t *testing.T) {
-	conf := Config{}
-	side := NewSideBySide(conf)
+	side := newSideBySide()
 	html, err := side.genSingleLineHTML(false, "d2h-cntx", 1, "{", " ")
 	fmt.Println(html)
 	fmt.Println(err)
 }
 
 func TestSideBySidePrinter_genEmptyDiff(t *testing.T) {
-	conf := Config{}
-	side := NewSideBySide(conf)
+	side := newSideBySide()
 	fileHTML, err := side.genEmptyDiff()
 	fmt.Println(fileHTML.Left)
 	fmt.Println(err)
 }
 
 func TestSideBySidePrinter_processLines(t *testing.T) {
-	oldLine := make([]*diff.Line, 3)
-	newLine := make([]*diff.Line, 5)
+	oldLine := make([]*Line, 3)
+	newLine := make([]*Line, 5)
 
-	conf := Config{}
-	side := NewSideBySide(conf)
+	side := newSideBySide()
 	side.processLines(true, oldLine, newLine)
 }
 
 func Test_getDiffName(t *testing.T) {
-	file := &diff.File{
+	file := &File{
 		OldName: "sample",
 		NewName: "sample2",
 	}
@@ -70,12 +64,6 @@ func Test_getDiffName(t *testing.T) {
 
 func Test_diffHighlight(t *testing.T) {
 	highlight := diffHighlight(" category:campaign,", " category:guidance,", false)
-	fmt.Println(highlight)
-}
-
-func Test_hoge(t *testing.T) {
-	arr := []int{1, 2, 3, 4, 5}
-	fmt.Println(arr)
-	fmt.Println(arr[2:])
-	fmt.Println(arr)
+	fmt.Println(highlight.First.Line)
+	fmt.Println(highlight.Second.Line)
 }

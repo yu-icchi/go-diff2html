@@ -1,4 +1,4 @@
-package diff
+package diff2html
 
 import (
 	"regexp"
@@ -11,12 +11,12 @@ const (
 	newFileNameHeader = "+++ "
 	hunkHeaderPrefix  = "@@"
 
-	Inserts       = "d2h-ins"
-	Deletes       = "d2h-del"
-	InsertChanges = "d2h-ins d2h-change"
-	DeleteChanges = "d2h-del d2h-change"
-	Ctx           = "d2h-cntx"
-	Info          = "d2h-info"
+	inserts       = "d2h-ins"
+	deletes       = "d2h-del"
+	insertChanges = "d2h-ins d2h-change"
+	deleteChanges = "d2h-del d2h-change"
+	context       = "d2h-cntx"
+	info          = "d2h-info"
 )
 
 var (
@@ -49,7 +49,7 @@ type Config struct {
 	SrcPrefix string
 }
 
-func New(conf Config) *Diff {
+func newDiff(conf Config) *Diff {
 	return &Diff{
 		conf:  conf,
 		Files: []*File{},
@@ -187,20 +187,20 @@ func (d *Diff) createLine(line string) {
 
 	if startsWith(line, newLinePrefixes) {
 		d.currentFile.AddedLines++
-		currentLine.Type = Inserts
-		currentLine.OldNumber = -1 // todo...nil?
+		currentLine.Type = inserts
+		currentLine.OldNumber = 0
 		d.newLine++
 		currentLine.NewNumber = d.newLine
 		d.currentBlock.addLine(currentLine)
 	} else if startsWith(line, delLinePrefixes) {
 		d.currentFile.DeletedLines++
-		currentLine.Type = Deletes
+		currentLine.Type = deletes
 		d.oldLine++
 		currentLine.OldNumber = d.oldLine
-		currentLine.NewNumber = -1 // todo...nil?
+		currentLine.NewNumber = 0
 		d.currentBlock.addLine(currentLine)
 	} else {
-		currentLine.Type = Ctx
+		currentLine.Type = context
 		d.oldLine++
 		currentLine.OldNumber = d.oldLine
 		d.newLine++

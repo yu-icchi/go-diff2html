@@ -1,4 +1,4 @@
-package html
+package diff2html
 
 const (
 	genericColumnLineNumber = `<tr>

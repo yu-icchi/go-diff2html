@@ -1,9 +1,8 @@
-package html
+package diff2html
 
 import (
 	"bytes"
 	"github.com/sergi/go-diff/diffmatchpatch"
-	"github.com/yu-ichiko/go-diff2html/diff"
 	"html/template"
 	"math"
 	"regexp"
@@ -12,7 +11,7 @@ import (
 )
 
 var (
-	genericColumnLineNumnerTemplate = template.Must(template.New("generic-column-line-number").Parse(genericColumnLineNumber))
+	genericColumnLineNumberTemplate = template.Must(template.New("generic-column-line-number").Parse(genericColumnLineNumber))
 	genericEmptyDiffTemplate        = template.Must(template.New("generic-empty-diff").Parse(genericEmptyDiff))
 	genericFilePathTemplate         = template.Must(template.New("generic-file-path").Parse(genericFilePath))
 	genericLineTemplate             = template.Must(template.New("generic-line").Parse(genericLine))
@@ -25,32 +24,19 @@ var (
 	tagFileRenamedTemplate          = template.Must(template.New("tag-file-renamed").Parse(tagFileRenamed))
 )
 
-type Config struct {
-}
-
-type sideBySide struct {
-	FileHTMLID string
-	FilePath   string
-	Diff       fileHTML
-	File       *diff.File
-}
-
 type fileHTML struct {
 	Left  string
 	Right string
 }
 
-func NewSideBySide(conf Config) *SideBySidePrinter {
-	return &SideBySidePrinter{
-		conf: conf,
-	}
+func newSideBySide() *sideBySidePrinter {
+	return &sideBySidePrinter{}
 }
 
-type SideBySidePrinter struct {
-	conf Config
+type sideBySidePrinter struct {
 }
 
-func (p *SideBySidePrinter) GenerateSideBySideHTML(files []*diff.File) (string, error) {
+func (p *sideBySidePrinter) GenerateSideBySideHTML(files []*File) (string, error) {
 	content := ""
 	for _, file := range files {
 		var fileHTML *fileHTML
@@ -88,7 +74,7 @@ func (p *SideBySidePrinter) GenerateSideBySideHTML(files []*diff.File) (string, 
 	return buf.String(), nil
 }
 
-func (p *SideBySidePrinter) makeDiffHTML(file *diff.File, diffs *fileHTML) (string, error) {
+func (p *sideBySidePrinter) makeDiffHTML(file *File, diffs *fileHTML) (string, error) {
 
 	pathHTML, err := p.makePathHTML(file)
 	if err != nil {
@@ -115,7 +101,7 @@ func (p *SideBySidePrinter) makeDiffHTML(file *diff.File, diffs *fileHTML) (stri
 	return buf.String(), nil
 }
 
-func (p *SideBySidePrinter) makePathHTML(file *diff.File) (string, error) {
+func (p *sideBySidePrinter) makePathHTML(file *File) (string, error) {
 	iconHTML, err := p.makeIconHTML()
 	if err != nil {
 		return "", err
@@ -141,7 +127,7 @@ func (p *SideBySidePrinter) makePathHTML(file *diff.File) (string, error) {
 	return buf.String(), nil
 }
 
-func (p *SideBySidePrinter) makeIconHTML() (string, error) {
+func (p *sideBySidePrinter) makeIconHTML() (string, error) {
 	buf := &bytes.Buffer{}
 	err := iconFileTemplate.Execute(buf, struct{}{})
 	if err != nil {
@@ -150,7 +136,7 @@ func (p *SideBySidePrinter) makeIconHTML() (string, error) {
 	return buf.String(), nil
 }
 
-func (p *SideBySidePrinter) makeTagHTML(file *diff.File) (string, error) {
+func (p *sideBySidePrinter) makeTagHTML(file *File) (string, error) {
 	tagTemplate := tagFileChangedTemplate
 	if file.IsRename {
 		tagTemplate = tagFileRenamedTemplate
@@ -171,16 +157,16 @@ func (p *SideBySidePrinter) makeTagHTML(file *diff.File) (string, error) {
 	return buf.String(), nil
 }
 
-func (p *SideBySidePrinter) makeSideHTML(blockHeader string) (string, error) {
+func (p *sideBySidePrinter) makeSideHTML(blockHeader string) (string, error) {
 	buf := &bytes.Buffer{}
-	err := genericColumnLineNumnerTemplate.Execute(buf, struct {
+	err := genericColumnLineNumberTemplate.Execute(buf, struct {
 		BlockHeader  string
 		Type         string
 		LineClass    string
 		ContentClass string
 	}{
 		BlockHeader:  blockHeader,
-		Type:         diff.Info,
+		Type:         info,
 		LineClass:    "d2h-code-side-linenumber",
 		ContentClass: "d2h-code-side-line",
 	})
@@ -190,7 +176,7 @@ func (p *SideBySidePrinter) makeSideHTML(blockHeader string) (string, error) {
 	return buf.String(), nil
 }
 
-func (p *SideBySidePrinter) genSideBySideFileHTML(file *diff.File) (*fileHTML, error) {
+func (p *sideBySidePrinter) genSideBySideFileHTML(file *File) (*fileHTML, error) {
 	var err error
 
 	fileHTML := &fileHTML{
@@ -205,8 +191,8 @@ func (p *SideBySidePrinter) genSideBySideFileHTML(file *diff.File) (*fileHTML, e
 			return nil, err
 		}
 
-		oldLines := make([]*diff.Line, 0)
-		newLines := make([]*diff.Line, 0)
+		oldLines := make([]*Line, 0)
+		newLines := make([]*Line, 0)
 
 		processChangeBlock := func() error {
 			// conf.matching == "none" only
@@ -216,21 +202,21 @@ func (p *SideBySidePrinter) genSideBySideFileHTML(file *diff.File) (*fileHTML, e
 			max := int(math.Max(float64(oldLen), float64(newLen)))
 
 			for i := 0; i < common; i++ {
-				oldLine := &diff.Line{Content: ""}
+				oldLine := &Line{Content: ""}
 				if oldLen > i {
 					oldLine = oldLines[i]
 				}
-				newLine := &diff.Line{Content: ""}
+				newLine := &Line{Content: ""}
 				if newLen > i {
 					newLine = newLines[i]
 				}
 				highlight := diffHighlight(oldLine.Content, newLine.Content, file.IsCombined)
-				left, err := p.genSingleLineHTML(file.IsCombined, diff.Deletes, oldLine.OldNumber, highlight.First.Line, highlight.First.Prefix)
+				left, err := p.genSingleLineHTML(file.IsCombined, deletes, oldLine.OldNumber, highlight.First.Line, highlight.First.Prefix)
 				if err != nil {
 					return err
 				}
 				fileHTML.Left += left
-				right, err := p.genSingleLineHTML(file.IsCombined, diff.Inserts, newLine.NewNumber, highlight.Second.Line, highlight.Second.Prefix)
+				right, err := p.genSingleLineHTML(file.IsCombined, inserts, newLine.NewNumber, highlight.Second.Line, highlight.Second.Prefix)
 				if err != nil {
 					return err
 				}
@@ -248,8 +234,8 @@ func (p *SideBySidePrinter) genSideBySideFileHTML(file *diff.File) (*fileHTML, e
 				fileHTML.Right += tmpHtml.Right
 			}
 
-			oldLines = make([]*diff.Line, 0)
-			newLines = make([]*diff.Line, 0)
+			oldLines = make([]*Line, 0)
+			newLines = make([]*Line, 0)
 			return nil
 		}
 
@@ -257,13 +243,13 @@ func (p *SideBySidePrinter) genSideBySideFileHTML(file *diff.File) (*fileHTML, e
 			prefix := string(line.Content[0])
 			escapedLine := line.Content[1:]
 
-			if line.Type != diff.Inserts && (len(newLines) > 0 || (line.Type != diff.Deletes && len(oldLines) > 0)) {
+			if line.Type != inserts && (len(newLines) > 0 || (line.Type != deletes && len(oldLines) > 0)) {
 				if err := processChangeBlock(); err != nil {
 					return nil, err
 				}
 			}
 
-			if line.Type == diff.Ctx {
+			if line.Type == context {
 				left, err := p.genSingleLineHTML(file.IsCombined, line.Type, line.OldNumber, escapedLine, prefix)
 				if err != nil {
 					return nil, err
@@ -274,8 +260,8 @@ func (p *SideBySidePrinter) genSideBySideFileHTML(file *diff.File) (*fileHTML, e
 					return nil, err
 				}
 				fileHTML.Right += right
-			} else if line.Type == diff.Inserts && len(oldLines) == 0 {
-				left, err := p.genSingleLineHTML(file.IsCombined, diff.Ctx, 0, "", "")
+			} else if line.Type == inserts && len(oldLines) == 0 {
+				left, err := p.genSingleLineHTML(file.IsCombined, context, 0, "", "")
 				if err != nil {
 					return nil, err
 				}
@@ -285,9 +271,9 @@ func (p *SideBySidePrinter) genSideBySideFileHTML(file *diff.File) (*fileHTML, e
 					return nil, err
 				}
 				fileHTML.Right += right
-			} else if line.Type == diff.Deletes {
+			} else if line.Type == deletes {
 				oldLines = append(oldLines, line)
-			} else if line.Type == diff.Inserts && len(oldLines) > 0 {
+			} else if line.Type == inserts && len(oldLines) > 0 {
 				newLines = append(newLines, line)
 			} else {
 				// console.error('unknown state in html side-by-side generator');
@@ -305,18 +291,18 @@ func (p *SideBySidePrinter) genSideBySideFileHTML(file *diff.File) (*fileHTML, e
 	return fileHTML, nil
 }
 
-func (p *SideBySidePrinter) processLines(isCombined bool, oldLines, newLines []*diff.Line) (*fileHTML, error) {
+func (p *sideBySidePrinter) processLines(isCombined bool, oldLines, newLines []*Line) (*fileHTML, error) {
 	fileHTML := &fileHTML{Left: "", Right: ""}
 
 	oldLinesLen := len(oldLines)
 	newLinesLen := len(newLines)
 	maxLinesNumber := int(math.Max(float64(oldLinesLen), float64(newLinesLen)))
 	for i := 0; i < maxLinesNumber; i++ {
-		var oldLine *diff.Line
+		var oldLine *Line
 		if oldLinesLen > i {
 			oldLine = oldLines[i]
 		}
-		var newLine *diff.Line
+		var newLine *Line
 		if newLinesLen > i {
 			newLine = newLines[i]
 		}
@@ -352,13 +338,13 @@ func (p *SideBySidePrinter) processLines(isCombined bool, oldLines, newLines []*
 				return nil, err
 			}
 			fileHTML.Left += left
-			right, err := p.genSingleLineHTML(isCombined, diff.Ctx, 0, "", "")
+			right, err := p.genSingleLineHTML(isCombined, context, 0, "", "")
 			if err != nil {
 				return nil, err
 			}
 			fileHTML.Right += right
 		} else if newLine != nil {
-			left, err := p.genSingleLineHTML(isCombined, diff.Ctx, 0, "", "")
+			left, err := p.genSingleLineHTML(isCombined, context, 0, "", "")
 			if err != nil {
 				return nil, err
 			}
@@ -376,7 +362,7 @@ func (p *SideBySidePrinter) processLines(isCombined bool, oldLines, newLines []*
 	return fileHTML, nil
 }
 
-func (p *SideBySidePrinter) genSingleLineHTML(isCombined bool, lineType string, num int, content string, possiblePrefix string) (string, error) {
+func (p *sideBySidePrinter) genSingleLineHTML(isCombined bool, lineType string, num int, content string, possiblePrefix string) (string, error) {
 	lineWithoutPrefix := content
 	prefix := possiblePrefix
 
@@ -411,7 +397,7 @@ func (p *SideBySidePrinter) genSingleLineHTML(isCombined bool, lineType string, 
 	return buf.String(), nil
 }
 
-func (p *SideBySidePrinter) genEmptyDiff() (*fileHTML, error) {
+func (p *sideBySidePrinter) genEmptyDiff() (*fileHTML, error) {
 	fileHTML := &fileHTML{}
 	fileHTML.Right = ""
 
@@ -420,7 +406,7 @@ func (p *SideBySidePrinter) genEmptyDiff() (*fileHTML, error) {
 		Type         string
 		ContentClass string
 	}{
-		Type:         diff.Info,
+		Type:         info,
 		ContentClass: "d2h-code-side-line",
 	})
 	if err != nil {
@@ -446,7 +432,7 @@ func separatePrefix(isCombined bool, line string) (string, string) {
 	return prefix, lineWithoutPrefix
 }
 
-func getHTMLID(file *diff.File) string {
+func getHTMLID(file *File) string {
 	name := getDiffName(file)
 	hash := 0
 	for i := 0; i < len(name); i++ {
@@ -458,7 +444,7 @@ func getHTMLID(file *diff.File) string {
 	return "d2h-" + name[:l]
 }
 
-func getDiffName(file *diff.File) string {
+func getDiffName(file *File) string {
 	oldFilename := unifyPath(file.OldName)
 	newFilename := unifyPath(file.NewName)
 
@@ -515,11 +501,10 @@ func diffHighlight(diffLine1, diffLine2 string, isCombined bool) Highlight {
 		} else if part.Type == diffmatchpatch.DiffDelete {
 			elemType = "del"
 		}
-		escapedValue := part.Text
 		if elemType != "" {
-			highlightedLine += "<" + elemType + ">" + escapedValue + "</" + elemType + ">"
+			highlightedLine += "<" + elemType + ">" + part.Text + "</" + elemType + ">"
 		} else {
-			highlightedLine += escapedValue
+			highlightedLine += part.Text
 		}
 	}
 

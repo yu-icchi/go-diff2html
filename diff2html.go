@@ -1,20 +1,12 @@
 package diff2html
 
-import (
-	"github.com/yu-ichiko/go-diff2html/diff"
-	"github.com/yu-ichiko/go-diff2html/html"
-)
-
 // GetPrettyHTML Generates the html diff.
 func GetPrettyHTML(input string) (string, error) {
-	d := diff.New(diff.Config{
-		DstPrefix: "",
-		SrcPrefix: "",
-	})
+	d := newDiff(Config{})
 	err := d.Parser(input)
 	if err != nil {
 		return "", err
 	}
-	diffHTML := html.NewSideBySide(html.Config{})
+	diffHTML := newSideBySide()
 	return diffHTML.GenerateSideBySideHTML(d.Files)
 }

@@ -1,4 +1,4 @@
-package diff
+package diff2html
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ func TestNew(t *testing.T) {
 		SrcPrefix: "",
 		DstPrefix: "",
 	}
-	d := New(conf)
+	d := newDiff(conf)
 	d.Parser(diff)
 
 	fmt.Println(d.Files)
@@ -35,7 +35,7 @@ func TestNew2(t *testing.T) {
 		SrcPrefix: "",
 		DstPrefix: "",
 	}
-	d := New(conf)
+	d := newDiff(conf)
 	d.Parser(diff)
 
 	fmt.Println(d.Files)
@@ -52,7 +52,7 @@ func TestNew3(t *testing.T) {
 		SrcPrefix: "",
 		DstPrefix: "",
 	}
-	d := New(conf)
+	d := newDiff(conf)
 	d.Parser(diff)
 
 	fmt.Println(d.Files)

@@ -33,8 +33,8 @@ func Test_GetPrettyHTML(t *testing.T) {
 	diff := difflib.UnifiedDiff{
 		A:        difflib.SplitLines(ao.String()),
 		B:        difflib.SplitLines(bo.String()),
-		FromFile: "Original",
-		ToFile:   "Current",
+		FromFile: "sample.json",
+		ToFile:   "sample.json",
 		Context:  3,
 	}
 	input, _ := difflib.GetUnifiedDiffString(diff)
@@ -59,4 +59,4 @@ func BenchmarkGetPrettyHTML(b *testing.B) {
 	}
 }
 
-// 5000	    226417 ns/op	  280411 B/op	     881 allocs/op
+// 5000	    227235 ns/op	  268941 B/op	     757 allocs/op
